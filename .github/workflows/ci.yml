@@ -31,3 +31,9 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: test
+      - run: |
+          # prepare taskwarrior, initial setup
+          yes | task
+          cargo run --example create_task | tee /tmp/create_task
+          task import /tmp/create_task || exit 1
+          cat /tmp/create_task | cargo run --example import_task || exit 1
