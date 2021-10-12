@@ -564,10 +564,9 @@ impl Serialize for Task {
         self.recur
             .as_ref()
             .map(|ref v| state.serialize_entry("recur", v));
-        self.depends.as_ref().map(|ref v| {
-            let v: Vec<String> = v.iter().map(Uuid::to_string).collect();
-            state.serialize_entry("depends", &v.join(","))
-        });
+        self.depends
+            .as_ref()
+            .map(|ref v| state.serialize_entry("depends", v));
         self.due
             .as_ref()
             .map(|ref v| state.serialize_entry("due", v));
@@ -719,12 +718,7 @@ impl<'de> Visitor<'de> for TaskDeserializeVisitor {
                     annotations = Some(visitor.next_value()?);
                 }
                 "depends" => {
-                    let raw: String = visitor.next_value()?;
-                    let mut uuids = vec![];
-                    for uuid in raw.split(",") {
-                        uuids.push(Uuid::parse_str(uuid).map_err(V::Error::custom)?);
-                    }
-                    depends = Some(uuids);
+                    depends = Some(visitor.next_value()?);
                 }
                 "due" => {
                     due = Some(visitor.next_value()?);
@@ -904,7 +898,7 @@ mod test {
 "status": "waiting",
 "tags": ["some", "tags", "are", "here"],
 "uuid": "8ca953d5-18b4-4eb9-bd56-18f2e5b752f0",
-"depends": "8ca953d5-18b4-4eb9-bd56-18f2e5b752f0,5a04bb1e-3f4b-49fb-b9ba-44407ca223b5",
+"depends": ["8ca953d5-18b4-4eb9-bd56-18f2e5b752f0", "5a04bb1e-3f4b-49fb-b9ba-44407ca223b5"],
 "wait": "20160508T164007Z",
 "urgency": 0.583562
 }"#;
@@ -941,6 +935,7 @@ mod test {
 
         let back = serde_json::to_string(&task).unwrap();
 
+        println!("{}", back);
         assert!(back.contains("description"));
         assert!(back.contains("some description"));
         assert!(back.contains("entry"));
@@ -956,11 +951,9 @@ mod test {
         assert!(back.contains("here"));
         assert!(back.contains("uuid"));
         assert!(back.contains("8ca953d5-18b4-4eb9-bd56-18f2e5b752f0"));
-        assert!(
-            back.contains(
-                "8ca953d5-18b4-4eb9-bd56-18f2e5b752f0,5a04bb1e-3f4b-49fb-b9ba-44407ca223b5",
-            )
-        );
+        assert!(back.contains(
+            r#"["8ca953d5-18b4-4eb9-bd56-18f2e5b752f0","5a04bb1e-3f4b-49fb-b9ba-44407ca223b5"]"#
+        ));
     }
 
     #[test]
