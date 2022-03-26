@@ -504,6 +504,11 @@ impl Task {
         self.until = new.map(Into::into);
     }
 
+    /// Get the remaining duration of the task
+    pub fn remaining(&self) -> Option<&Date> {
+        self.remaining.as_ref()
+    }
+
     /// Get the remaining date of the task mutable
     pub fn remaining_mut(&mut self) -> Option<&mut Date> {
         self.remaining.as_mut()
