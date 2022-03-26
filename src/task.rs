@@ -107,6 +107,9 @@ pub struct Task {
     until: Option<Date>,
     /// This hides the task until the wait date
     #[builder(default)]
+    remaining: Option<Date>,
+    /// Remaining time for a task
+    #[builder(default)]
     wait: Option<Date>,
     /// This contains the urgency of the task
     #[builder(default)]
@@ -146,6 +149,7 @@ impl Task {
         start: Option<Date>,
         tags: Option<Vec<Tag>>,
         until: Option<Date>,
+        remaining: Option<Date>,
         wait: Option<Date>,
         urgency: Option<Urgency>,
         uda: UDA,
@@ -172,6 +176,7 @@ impl Task {
             start: start,
             tags: tags,
             until: until,
+            remaining: remaining,
             wait: wait,
             urgency: urgency,
             uda: uda,
@@ -499,6 +504,19 @@ impl Task {
         self.until = new.map(Into::into);
     }
 
+    /// Get the remaining date of the task mutable
+    pub fn remaining_mut(&mut self) -> Option<&mut Date> {
+        self.remaining.as_mut()
+    }
+
+    /// Set remaining
+    pub fn set_remaining<T>(&mut self, new: Option<T>)
+    where
+        T: Into<Date>,
+    {
+        self.remaining = new.map(Into::into);
+    }
+
     /// Get the urgency of the task
     pub fn urgency(&self) -> Option<&Urgency> {
         self.urgency.as_ref()
@@ -600,6 +618,9 @@ impl Serialize for Task {
         self.until
             .as_ref()
             .map(|ref v| state.serialize_entry("until", v));
+        self.remaining
+            .as_ref()
+            .map(|ref v| state.serialize_entry("remaining", v));
         self.wait
             .as_ref()
             .map(|ref v| state.serialize_entry("wait", v));
@@ -641,6 +662,7 @@ impl<'de> Deserialize<'de> for Task {
             "start",
             "tags",
             "until",
+            "remaining",
             "wait",
             "urgency",
             "uda",
@@ -685,6 +707,7 @@ impl<'de> Visitor<'de> for TaskDeserializeVisitor {
         let mut start = None;
         let mut tags = None;
         let mut until = None;
+        let mut remaining = None;
         let mut wait = None;
         let mut urgency = None;
         let mut uda = UDA::default();
@@ -759,6 +782,9 @@ impl<'de> Visitor<'de> for TaskDeserializeVisitor {
                 "until" => {
                     until = Some(visitor.next_value()?);
                 }
+                "remaining" => {
+                    remaining = Some(visitor.next_value()?);
+                }
                 "wait" => {
                     wait = Some(visitor.next_value()?);
                 }
@@ -815,6 +841,7 @@ impl<'de> Visitor<'de> for TaskDeserializeVisitor {
             start,
             tags,
             until,
+            remaining,
             wait,
             urgency,
             uda,
